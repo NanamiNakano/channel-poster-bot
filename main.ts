@@ -12,7 +12,6 @@ bot.use(session({
     return {};
   },
 }));
-
 bot.use(conversations());
 bot.use(createConversation(addRoute))
 
@@ -37,15 +36,22 @@ bot.on("channel_post")
   if (routes.value == null) {
     return
   }
+  
   const source_name = ctx.chat.title
+  const inlineKeyboard = new InlineKeyboard().url("View", getMessageLink(ctx.msg))
+  const header = `New post in ${source_name}:\n\n`
+  const entities = ctx.entities().map((entity) => {
+    entity.offset += header.length
+    return entity
+  })
 
   routes.value.forEach(async (destination_id) => {
-    const inlineKeyboard = new InlineKeyboard().url("View", getMessageLink(ctx.msg))
-    await bot.api.sendMessage(destination_id, `New post in ${source_name}:\n\n` +
+    await bot.api.sendMessage(destination_id, header +
       ctx.msg.text + "\n\n" +
       "#reading" 
     , {
-      reply_markup: inlineKeyboard
+      reply_markup: inlineKeyboard,
+      entities: entities
     })
   })
 })
