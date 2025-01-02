@@ -29,7 +29,8 @@ bot.command("cancel", async (ctx) => {
   await ctx.reply("Operation cancelled.");
 })
 
-bot.on("channel_post:text",async (ctx) => {
+bot.on(["channel_post", ":forward_origin"])
+.on(":text",async (ctx) => {
   const chat_id = ctx.chat.id
   const routes = await kv.get<number[]>(["route", chat_id.toString()])
   if (routes.value == null) {
