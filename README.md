@@ -17,6 +17,7 @@ Demo:
 ```bash
 # remember to edit .env file!!!
 cp .env.example .env
+# not necessary. you can also use environment varibles
 
 # make sure you have installed deno
 deno install
