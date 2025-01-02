@@ -1,8 +1,9 @@
-import { Bot, GrammyError, HttpError, session } from "@grammy"
+import { Bot, GrammyError, HttpError, InlineKeyboard, session } from "@grammy"
 import { config, kv } from "./global.ts"
 import { conversations, createConversation } from "@grammy_conversations";
 import { MyContext } from "./types.ts";
 import { addRoute } from "./ctx.ts";
+import { getMessageLink } from "./utils.ts";
 
 const bot = new Bot<MyContext>(config.token)
 
@@ -39,11 +40,13 @@ bot.on("channel_post")
   const source_name = ctx.chat.title
 
   routes.value.forEach(async (destination_id) => {
+    const inlineKeyboard = new InlineKeyboard().url("View", getMessageLink(ctx.msg))
     await bot.api.sendMessage(destination_id, `New post in ${source_name}:\n\n` +
       ctx.msg.text + "\n\n" +
-      `View at https://t.me/${ctx.chat.username}/${ctx.msg.message_id}\n\n` +
       "#reading" 
-    )
+    , {
+      reply_markup: inlineKeyboard
+    })
   })
 })
 
