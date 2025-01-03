@@ -113,7 +113,7 @@ bot.command("archive", async (ctx) => {
   await ctx.api.editMessageText(
     replyed.chat.id,
     replyed.message_id,
-    "Archive job submitted successfully!",
+    "Archive job submitted successfully!\n" + archivedPage.message,
   );
 
   let tries = 0;
@@ -126,32 +126,27 @@ bot.command("archive", async (ctx) => {
     }
 
     if (status.status == "success") {
-      await ctx.api.editMessageText(
-        replyed.chat.id,
-        replyed.message_id,
-        "Archived successfully!\n" +
-          `Link: https://web.archive.org/${status.timestamp}/${status.original_url}`,
-      );
-      break;
+      const inlineKeyboard = new InlineKeyboard().url(
+        "View",
+        `https://web.archive.org/${status.timestamp}/${status.original_url}`,
+      )
+      await ctx.reply("Archived successfully!", {
+        reply_markup: inlineKeyboard,
+      });
+      return;
     } else if (status.status == "error") {
-      await ctx.api.editMessageText(
-        replyed.chat.id,
-        replyed.message_id,
+      await ctx.reply(
         "Failed to archive.\n" +
         "Reason: " + status.message,
       );
-      break;
+      return;
     }
 
-    await ctx.api.editMessageText(
-      replyed.chat.id,
-      replyed.message_id,
-      `Checking archive status... Retry ${
-        tries + 1
-      }/${config.archiveCheckMaxTries}`,
-    );
     tries++;
     await new Promise((r) => setTimeout(r, config.archiveCheckDelay * 1000));
+  }
+  if (tries == config.archiveCheckMaxTries) {
+    await ctx.reply("Seems like the archive is taking too long. Please check it manually.");
   }
 });
 
