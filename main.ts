@@ -35,12 +35,42 @@ bot.command("archive", async (ctx) => {
     return;
   }
 
+  let url: string;
   const items = ctx.match.split(" ");
-  if (items.length != 1) {
-    await ctx.reply("Usage: /archive <url>");
+  if (items.length > 1) {
+    await ctx.reply("Usage: /archive <url> or reply to a message with /archive");
     return;
   }
-  const url = items[0];
+
+  if (items[0] == "") {
+    const replyTo = ctx.msg.reply_to_message
+    if (!replyTo) {
+      await ctx.reply("Usage: /archive <url> or reply to a message with /archive");
+      return;
+    }
+    
+    const text = replyTo.text;
+    if (!text) {
+      await ctx.reply("No URL detected.");
+      return;
+    }
+
+    const entities = replyTo.entities;
+    if (!entities) {
+      await ctx.reply("No URL detected.");
+      return;
+    }
+
+    const urls = entities.filter((entity) => entity.type == "url");
+    if (urls.length == 0) {
+      await ctx.reply("No URL detected.");
+      return;
+    }
+
+    url = text.slice(urls[0].offset, urls[0].offset + urls[0].length);
+  } else {
+    url = items[0];
+  }
 
   try {
     new URL(url);
