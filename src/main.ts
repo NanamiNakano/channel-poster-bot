@@ -158,7 +158,7 @@ router.route("command:archive").command("archive", async (ctx) => {
   if (status.status == "success") {
     const inlineKeyboard = new InlineKeyboard().url(
       "View",
-      `https://web.archive.org/${status.timestamp}/${status.original_url}`,
+      `https://web.archive.org/web/${status.timestamp}/${status.original_url}`,
     );
     await ctx.reply("Archived successfully!", {
       reply_markup: inlineKeyboard,
