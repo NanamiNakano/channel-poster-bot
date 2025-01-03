@@ -9,7 +9,7 @@ bot.use(session({
     return {};
   },
 }));
-setupConversations()
+setupConversations();
 bot.use(router);
 
 Deno.addSignalListener("SIGINT", () => bot.stop());
@@ -30,6 +30,11 @@ router.route("command:archive").command("archive", async (ctx) => {
   if (items.length > 1) {
     await ctx.reply(
       "Usage: /archive <url> or reply to a message with /archive",
+      {
+        reply_parameters: {
+          message_id: ctx.msg.message_id,
+        },
+      },
     );
     return;
   }
@@ -39,25 +44,42 @@ router.route("command:archive").command("archive", async (ctx) => {
     if (!replyTo) {
       await ctx.reply(
         "Usage: /archive <url> or reply to a message with /archive",
+        {
+          reply_parameters: {
+            message_id: ctx.msg.message_id,
+          },
+        },
       );
       return;
     }
 
     const text = replyTo.text;
     if (!text) {
-      await ctx.reply("No URL detected.");
+      await ctx.reply("No URL detected.", {
+        reply_parameters: {
+          message_id: ctx.msg.message_id,
+        },
+      });
       return;
     }
 
     const entities = replyTo.entities;
     if (!entities) {
-      await ctx.reply("No URL detected.");
+      await ctx.reply("No URL detected.", {
+        reply_parameters: {
+          message_id: ctx.msg.message_id,
+        },
+      });
       return;
     }
 
     const urls = entities.filter((entity) => entity.type == "url");
     if (urls.length == 0) {
-      await ctx.reply("No URL detected.");
+      await ctx.reply("No URL detected.", {
+        reply_parameters: {
+          message_id: ctx.msg.message_id,
+        },
+      });
       return;
     }
 
@@ -69,11 +91,19 @@ router.route("command:archive").command("archive", async (ctx) => {
   try {
     new URL(url);
   } catch (_e) {
-    await ctx.reply("Invalid URL");
+    await ctx.reply("Invalid URL", {
+      reply_parameters: {
+        message_id: ctx.msg.message_id,
+      },
+    });
     return;
   }
 
-  const replyed = await ctx.reply("Archiving...");
+  const replyed = await ctx.reply("Archiving...", {
+    reply_parameters: {
+      message_id: ctx.msg.message_id,
+    },
+  });
 
   const archivedPage = await archive(url);
   if (!archivedPage) {
@@ -115,7 +145,12 @@ router.route("command:archive").command("archive", async (ctx) => {
   const status = await checkArchive(archivedPage.job_id);
   if (!status) {
     await ctx.reply(
-      "Failed to check archive status. Please check it manuall0oy.",
+      "Failed to check archive status. Please check it manually.",
+      {
+        reply_parameters: {
+          message_id: ctx.msg.message_id,
+        },
+      },
     );
     return;
   }
@@ -127,6 +162,9 @@ router.route("command:archive").command("archive", async (ctx) => {
     );
     await ctx.reply("Archived successfully!", {
       reply_markup: inlineKeyboard,
+      reply_parameters: {
+        message_id: ctx.msg.message_id,
+      },
     });
     return;
   }
@@ -134,11 +172,21 @@ router.route("command:archive").command("archive", async (ctx) => {
     await ctx.reply(
       "Failed to archive.\n" +
         "Reason: " + status.message,
+      {
+        reply_parameters: {
+          message_id: ctx.msg.message_id,
+        },
+      },
     );
     return;
   }
   await ctx.reply(
     "Seems like the archive is taking too long. Please check it manually.",
+    {
+      reply_parameters: {
+        message_id: ctx.msg.message_id,
+      },
+    },
   );
 });
 
