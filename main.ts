@@ -117,9 +117,8 @@ bot.command("archive", async (ctx) => {
   await ctx.api.editMessageText(
     replyed.chat.id,
     replyed.message_id,
-    "Archive job submitted successfully!" + archivedPage.message
-      ? `\n${archivedPage.message}`
-      : "",
+    "Archive job submitted successfully!" +
+      (archivedPage.message ? `\n${archivedPage.message}` : ""),
   );
 
   await sleep(config.archiveCheckDelay);
