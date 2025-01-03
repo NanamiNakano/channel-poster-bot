@@ -11,6 +11,12 @@ export const router = new Router<MyContext>((ctx) => {
     if (ctx.hasCommand("archive")) {
         return "command:archive"
     }
+    if (ctx.hasCommand("whitelist")) {
+        return "command:whitelist"
+    }
+    if (ctx.hasCommand("blacklist")) {
+        return "command:blacklist"
+    }
 })
 
 export const other = router.otherwise()

@@ -2,7 +2,7 @@ import { Bot, GrammyError, HttpError, InlineKeyboard, session } from "@grammy";
 import { config, kv } from "./global.ts";
 import { conversations, createConversation } from "@grammy_conversations";
 import { MyContext } from "./types.ts";
-import { addRoute } from "./ctx.ts";
+import { addRoute, blacklist, whitelist } from "./ctx.ts";
 import { archive, checkArchive, getMessageLink, sleep } from "./utils.ts";
 import { other, router } from "./router.ts";
 
@@ -15,7 +15,9 @@ bot.use(session({
 }));
 bot.use(conversations());
 bot.use(createConversation(addRoute));
-bot.use(router)
+bot.use(createConversation(whitelist));
+bot.use(createConversation(blacklist));
+bot.use(router);
 
 router.route("command:add", async (ctx) => {
   if (ctx.from?.id != config.owner) {
@@ -186,6 +188,24 @@ other.on("channel_post")
       );
     });
   });
+
+router.route("command:whitelist", async (ctx) => {
+  if (ctx.from?.id != config.owner) {
+    await ctx.reply("You are not allowed to use this command.");
+    return;
+  }
+
+  await ctx.conversation.enter("whitelist");
+})
+
+router.route("command:blacklist", async (ctx) => {
+  if (ctx.from?.id != config.owner) {
+    await ctx.reply("You are not allowed to use this command.");
+    return;
+  }
+
+  await ctx.conversation.enter("blacklist");
+})
 
 bot.catch((err) => {
   const ctx = err.ctx;
