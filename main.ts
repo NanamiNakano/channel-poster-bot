@@ -107,7 +107,8 @@ bot.command("archive", async (ctx) => {
       await ctx.api.editMessageText(
         replyed.chat.id,
         replyed.message_id,
-        "Failed to archive.",
+        "Failed to archive.\n" +
+        "Reason: " + status.message,
       );
       break;
     }

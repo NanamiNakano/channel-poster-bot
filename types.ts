@@ -22,17 +22,32 @@ export type ArchiveResponse =
     status_ext: string;
   };
 
-export type StatusResponse = {
+export type StatusResponse = 
+  | {
+  status: "success";
+  job_id: string;
+  resources: string[];
+  screenshot?: string;
   counters: Counters;
   delay_wb_availability: boolean;
   duration_sec: number;
   http_status: number;
-  job_id: string;
   original_url: string;
-  outlinks: string[];
-  resources: string[];
-  status: string;
+  outlinks?: string[];
   timestamp: string;
+}
+| {
+  status: "error";
+  job_id: string;
+  resources: string[];
+  exception: string;
+  status_ext: string;
+  message: string;
+}
+| {
+  status: "pending";
+  job_id: string;
+  resources: string[];
 };
 
 export type Counters = {
