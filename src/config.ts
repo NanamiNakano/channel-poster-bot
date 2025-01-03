@@ -5,6 +5,7 @@ export class Config {
   owner: number;
   archiveToken: string;
   archiveCheckDelay: number;
+  denoKvUrl?: string;
 
   constructor() {
     const token = Deno.env.get("BOT_TOKEN");
@@ -31,5 +32,7 @@ export class Config {
     } else {
       this.archiveCheckDelay = parseInt(archiveCheckDelay);
     }
+
+    this.denoKvUrl = Deno.env.get("DENO_KV_URL");
   }
 }
