@@ -1,22 +1,15 @@
-import { Bot, GrammyError, HttpError, InlineKeyboard, session } from "@grammy";
-import { config, kv } from "./global.ts";
-import { conversations, createConversation } from "@grammy_conversations";
-import { MyContext } from "./types.ts";
-import { addRoute, blacklist, whitelist } from "./ctx.ts";
+import { GrammyError, HttpError, InlineKeyboard, session } from "@grammy";
+import { bot, config, kv } from "./global.ts";
 import { archive, checkArchive, getMessageLink, sleep } from "./utils.ts";
 import { other, router } from "./router.ts";
-
-const bot = new Bot<MyContext>(config.token);
+import { setupConversations } from "./ctx/index.ts";
 
 bot.use(session({
   initial() {
     return {};
   },
 }));
-bot.use(conversations());
-bot.use(createConversation(addRoute));
-bot.use(createConversation(whitelist));
-bot.use(createConversation(blacklist));
+setupConversations()
 bot.use(router);
 
 router.route("command:add", async (ctx) => {
@@ -196,7 +189,7 @@ router.route("command:whitelist", async (ctx) => {
   }
 
   await ctx.conversation.enter("whitelist");
-})
+});
 
 router.route("command:blacklist", async (ctx) => {
   if (ctx.from?.id != config.owner) {
@@ -205,7 +198,7 @@ router.route("command:blacklist", async (ctx) => {
   }
 
   await ctx.conversation.enter("blacklist");
-})
+});
 
 bot.catch((err) => {
   const ctx = err.ctx;
