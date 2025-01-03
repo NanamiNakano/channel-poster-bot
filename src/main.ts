@@ -13,11 +13,6 @@ setupConversations()
 bot.use(router);
 
 router.route("command:add", async (ctx) => {
-  if (ctx.from?.id != config.owner) {
-    await ctx.reply("You are not allowed to use this command.");
-    return;
-  }
-
   await ctx.conversation.enter("addRoute");
 });
 
@@ -27,11 +22,6 @@ router.route("command:cancel", async (ctx) => {
 });
 
 router.route("command:archive").command("archive", async (ctx) => {
-  if (ctx.from?.id != config.owner) {
-    await ctx.reply("You are not allowed to use this command.");
-    return;
-  }
-
   let url: string;
   const items = ctx.match.split(" ");
   if (items.length > 1) {
@@ -183,20 +173,10 @@ other.on("channel_post")
   });
 
 router.route("command:whitelist", async (ctx) => {
-  if (ctx.from?.id != config.owner) {
-    await ctx.reply("You are not allowed to use this command.");
-    return;
-  }
-
   await ctx.conversation.enter("whitelist");
 });
 
 router.route("command:blacklist", async (ctx) => {
-  if (ctx.from?.id != config.owner) {
-    await ctx.reply("You are not allowed to use this command.");
-    return;
-  }
-
   await ctx.conversation.enter("blacklist");
 });
 
