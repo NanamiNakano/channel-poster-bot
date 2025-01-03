@@ -5,7 +5,6 @@ export class Config {
   owner: number;
   archiveToken: string;
   archiveCheckDelay: number;
-  archiveCheckMaxTries: number;
 
   constructor() {
     const token = Deno.env.get("BOT_TOKEN");
@@ -31,13 +30,6 @@ export class Config {
       this.archiveCheckDelay = 60;
     } else {
       this.archiveCheckDelay = parseInt(archiveCheckDelay);
-    }
-
-    const archiveCheckMaxTries = Deno.env.get("ARCHIVE_CHECK_MAX_RETRIES");
-    if (!archiveCheckMaxTries) {
-      this.archiveCheckMaxTries = 10;
-    } else {
-      this.archiveCheckMaxTries = parseInt(archiveCheckMaxTries);
     }
   }
 }

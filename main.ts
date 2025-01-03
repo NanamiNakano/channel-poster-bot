@@ -3,7 +3,7 @@ import { config, kv } from "./global.ts";
 import { conversations, createConversation } from "@grammy_conversations";
 import { MyContext } from "./types.ts";
 import { addRoute } from "./ctx.ts";
-import { archive, checkArchive, getMessageLink } from "./utils.ts";
+import { archive, checkArchive, getMessageLink, sleep } from "./utils.ts";
 
 const bot = new Bot<MyContext>(config.token);
 
@@ -38,17 +38,21 @@ bot.command("archive", async (ctx) => {
   let url: string;
   const items = ctx.match.split(" ");
   if (items.length > 1) {
-    await ctx.reply("Usage: /archive <url> or reply to a message with /archive");
+    await ctx.reply(
+      "Usage: /archive <url> or reply to a message with /archive",
+    );
     return;
   }
 
   if (items[0] == "") {
-    const replyTo = ctx.msg.reply_to_message
+    const replyTo = ctx.msg.reply_to_message;
     if (!replyTo) {
-      await ctx.reply("Usage: /archive <url> or reply to a message with /archive");
+      await ctx.reply(
+        "Usage: /archive <url> or reply to a message with /archive",
+      );
       return;
     }
-    
+
     const text = replyTo.text;
     if (!text) {
       await ctx.reply("No URL detected.");
@@ -96,7 +100,7 @@ bot.command("archive", async (ctx) => {
       replyed.chat.id,
       replyed.message_id,
       "Failed to submit archive job.\n" +
-      "Reason: " + archivedPage.message,
+        "Reason: " + archivedPage.message,
     );
     return;
   }
@@ -116,38 +120,35 @@ bot.command("archive", async (ctx) => {
     "Archive job submitted successfully!\n" + archivedPage.message,
   );
 
-  let tries = 0;
-  while (tries < config.archiveCheckMaxTries) {
-    const status = await checkArchive(archivedPage.job_id);
-    if (!status) {
-      tries++;
-      await new Promise((r) => setTimeout(r, config.archiveCheckDelay * 1000));
-      continue;
-    }
+  await sleep(config.archiveCheckDelay);
+  const status = await checkArchive(archivedPage.job_id);
+  if (!status) {
+    await ctx.reply(
+      "Failed to check archive status. Please check it manuall0oy.",
+    );
+    return;
+  }
 
-    if (status.status == "success") {
-      const inlineKeyboard = new InlineKeyboard().url(
-        "View",
-        `https://web.archive.org/${status.timestamp}/${status.original_url}`,
-      )
-      await ctx.reply("Archived successfully!", {
-        reply_markup: inlineKeyboard,
-      });
-      return;
-    } else if (status.status == "error") {
-      await ctx.reply(
-        "Failed to archive.\n" +
+  if (status.status == "success") {
+    const inlineKeyboard = new InlineKeyboard().url(
+      "View",
+      `https://web.archive.org/${status.timestamp}/${status.original_url}`,
+    );
+    await ctx.reply("Archived successfully!", {
+      reply_markup: inlineKeyboard,
+    });
+    return;
+  }
+  if (status.status == "error") {
+    await ctx.reply(
+      "Failed to archive.\n" +
         "Reason: " + status.message,
-      );
-      return;
-    }
-
-    tries++;
-    await new Promise((r) => setTimeout(r, config.archiveCheckDelay * 1000));
+    );
+    return;
   }
-  if (tries == config.archiveCheckMaxTries) {
-    await ctx.reply("Seems like the archive is taking too long. Please check it manually.");
-  }
+  await ctx.reply(
+    "Seems like the archive is taking too long. Please check it manually.",
+  );
 });
 
 bot.on("channel_post")
