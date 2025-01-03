@@ -12,6 +12,9 @@ bot.use(session({
 setupConversations()
 bot.use(router);
 
+Deno.addSignalListener("SIGINT", () => bot.stop());
+Deno.addSignalListener("SIGTERM", () => bot.stop());
+
 router.route("command:add", async (ctx) => {
   await ctx.conversation.enter("addRoute");
 });
