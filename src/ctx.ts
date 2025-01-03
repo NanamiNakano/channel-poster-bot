@@ -2,7 +2,7 @@ import { MessageOriginChannel, MessageOriginUser } from "@grammy_types";
 import { kv } from "./global.ts";
 import { MyContext, MyConversation } from "./types.ts";
 import { produce } from "@immer";
-import { InlineKeyboard } from "@grammy";
+import { Keyboard } from "@grammy";
 
 export async function addRoute(conversation: MyConversation, ctx: MyContext) {
     await ctx.reply("Please forward a message from source channel.")
@@ -15,14 +15,14 @@ export async function addRoute(conversation: MyConversation, ctx: MyContext) {
     const destination_id = destination.chat.id
     const destination_name = destination.chat.title
 
-    const existing = await kv.get<number[]>(["route", source_id.toString()])
+    const existing = await conversation.external(async () => await kv.get<number[]>(["route", source_id.toString()]))
     if (existing.value == null) {
-        await kv.set(["route", source_id.toString()], [destination_id])
+        await conversation.external(async () => await kv.set(["route", source_id.toString()], [destination_id]))
     } else {
         const destinations = produce(existing.value, (draft: number[]) => {
             draft.push(destination_id)
         })
-        await kv.set(["route", source_id.toString()], destinations)
+        await conversation.external(async () => await kv.set(["route", source_id.toString()], destinations))
     }
 
     await ctx.reply("Route added: \n" +
@@ -35,32 +35,40 @@ export async function addRoute(conversation: MyConversation, ctx: MyContext) {
 export async function whitelist(conversation: MyConversation, ctx: MyContext) {
     await ctx.reply("Please forward a message from the user you want to whitelist.")
     const user = (await conversation.waitFor("msg:forward_origin:user")).msg.forward_origin as MessageOriginUser
-    console.log(user)
     if (user.sender_user.is_bot) {
         await ctx.reply("Bots can not be whitelisted.")
         return
     }
 
-    const whitelisted = await kv.get<boolean>(["whitelist", user.sender_user.id.toString()])
+    const whitelisted = await conversation.external(async () => await kv.get<boolean>(["whitelist", user.sender_user.id.toString()]))
     if (whitelisted.value == true) {
         await ctx.reply("User is already whitelisted.")
         return
     }
     if (whitelisted.value == false) {
-        const inlineKeyboard = new InlineKeyboard().text("Yes", "yes").text("No", "no")
+        const keyboard = new Keyboard()
+        .text("Yes").row()
+        .text("No")
+        .oneTime()
+        .resized()
         await ctx.reply("User is blacklisted. Do you want to unblacklist?", {
-            reply_markup: inlineKeyboard
+            reply_markup: keyboard
         })
-        conversation.waitForCallbackQuery("no", async (ctx) => {
+
+        const reply = await conversation.waitFor("msg:text")
+        if (reply.msg.text == "No") {
             await ctx.reply("No changes made.")
-        })
-        conversation.waitForCallbackQuery("yes", async (ctx) => {
-            await kv.set(["whitelist", user.sender_user.id.toString()], true)
+            return
+        }
+        if (reply.msg.text == "Yes") {
+            await conversation.external(async () => await kv.set(["whitelist", user.sender_user.id.toString()], true))
             await ctx.reply("User whitelisted.")
-        })
+            return
+        }
+        await ctx.reply("Can not undersant your reply. Aborting...")
         return
     }
-    await kv.set(["whitelist", user.sender_user.id.toString()], true)
+    await conversation.external(async () => await kv.set(["whitelist", user.sender_user.id.toString()], true))
     await ctx.reply("User whitelisted.")
 }
 
@@ -72,25 +80,34 @@ export async function blacklist(conversation: MyConversation, ctx: MyContext) {
         return
     }
 
-    const whitelisted = await kv.get<boolean>(["whitelist", user.sender_user.id.toString()])
+    const whitelisted = await conversation.external(async () => await kv.get<boolean>(["whitelist", user.sender_user.id.toString()]))
     if (whitelisted.value == false) {
         await ctx.reply("User is already blacklisted.")
         return
     }
     if (whitelisted.value == true) {
-        const inlineKeyboard = new InlineKeyboard().text("Yes", "yes").text("No", "no")
+        const keyboard = new Keyboard()
+        .text("Yes").row()
+        .text("No")
+        .oneTime()
+        .resized()
         await ctx.reply("User is whitelisted. Do you want to unwhitelist?", {
-            reply_markup: inlineKeyboard
+            reply_markup: keyboard
         })
-        conversation.waitForCallbackQuery("no", async (ctx) => {
+
+        const reply = await conversation.waitFor("msg:text")
+        if (reply.msg.text == "No") {
             await ctx.reply("No changes made.")
-        })
-        conversation.waitForCallbackQuery("yes", async (ctx) => {
-            await kv.set(["whitelist", user.sender_user.id.toString()], false)
+            return
+        }
+        if (reply.msg.text == "Yes") {
+            await conversation.external(async () => await kv.set(["whitelist", user.sender_user.id.toString()], false))
             await ctx.reply("User blacklisted.")
-        })
+            return
+        }
+        await ctx.reply("Can not undersant your reply. Aborting...")
         return
     }
-    await kv.set(["whitelist", user.sender_user.id.toString()], false)
+    await conversation.external(async () => await kv.set(["whitelist", user.sender_user.id.toString()], false))
     await ctx.reply("User blacklisted.")
 }
