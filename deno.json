@@ -8,6 +8,7 @@
     "@std/dotenv": "jsr:@std/dotenv@^0.225.3",
     "@grammy_types": "https://deno.land/x/grammy_types@v3.17.0/mod.ts",
     "@grammy_conversations": "https://deno.land/x/grammy_conversations@v1.2.0/mod.ts",
-    "@immer": "https://cdn.skypack.dev/immer@10.1.1?dts"
+    "@immer": "https://cdn.skypack.dev/immer@10.1.1?dts",
+    "@grammy_router": "https://deno.land/x/grammy_router@v2.0.0/mod.ts"
   }
 }

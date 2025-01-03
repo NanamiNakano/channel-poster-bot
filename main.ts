@@ -4,6 +4,7 @@ import { conversations, createConversation } from "@grammy_conversations";
 import { MyContext } from "./types.ts";
 import { addRoute } from "./ctx.ts";
 import { archive, checkArchive, getMessageLink, sleep } from "./utils.ts";
+import { other, router } from "./router.ts";
 
 const bot = new Bot<MyContext>(config.token);
 
@@ -14,8 +15,9 @@ bot.use(session({
 }));
 bot.use(conversations());
 bot.use(createConversation(addRoute));
+bot.use(router)
 
-bot.command("add", async (ctx) => {
+router.route("command:add", async (ctx) => {
   if (ctx.from?.id != config.owner) {
     await ctx.reply("You are not allowed to use this command.");
     return;
@@ -24,12 +26,12 @@ bot.command("add", async (ctx) => {
   await ctx.conversation.enter("addRoute");
 });
 
-bot.command("cancel", async (ctx) => {
+router.route("command:cancel", async (ctx) => {
   await ctx.conversation.exit();
   await ctx.reply("Operation cancelled.");
 });
 
-bot.command("archive", async (ctx) => {
+router.route("command:archive").command("archive", async (ctx) => {
   if (ctx.from?.id != config.owner) {
     await ctx.reply("You are not allowed to use this command.");
     return;
@@ -152,7 +154,7 @@ bot.command("archive", async (ctx) => {
   );
 });
 
-bot.on("channel_post")
+other.on("channel_post")
   .on(":text", async (ctx) => {
     const chat_id = ctx.chat.id;
     const routes = await kv.get<number[]>(["route", chat_id.toString()]);
