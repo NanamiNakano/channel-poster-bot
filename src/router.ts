@@ -1,6 +1,6 @@
 import { Router } from "@grammy_router";
 import { MyContext } from "./types.ts";
-import { config } from "./global.ts";
+import { config, kv } from "./global.ts";
 
 export const router = new Router<MyContext>(async (ctx) => {
   if (ctx.hasCommand("add")) {
@@ -15,8 +15,22 @@ export const router = new Router<MyContext>(async (ctx) => {
     return "command:cancel";
   }
   if (ctx.hasCommand("archive")) {
-    if (ctx.from?.id != config.owner) {
+    if (!ctx.from) {
       await ctx.reply("You are not allowed to use this command.");
+      return;
+    }
+    const whitelisted = await kv.get<boolean>([
+      "whitelist",
+      ctx.from.id.toString(),
+    ]);
+    if (whitelisted.value == false) {
+      await ctx.reply("You are not allowed to use this command.");
+      return;
+    }
+    if (whitelisted.value == null) {
+      await ctx.reply(
+        "You need to be whitelisted before using this command. Please contact the bot owner.",
+      );
       return;
     }
 
