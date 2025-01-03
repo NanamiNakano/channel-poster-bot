@@ -196,4 +196,5 @@ bot.catch((err) => {
   }
 });
 
-bot.start();
+console.log("Bot started!");
+await bot.start();
